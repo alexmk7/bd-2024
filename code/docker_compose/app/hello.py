@@ -5,13 +5,13 @@ import sqlalchemy
 import random
 from sqlalchemy.sql import text
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from elasticsearch import Elasticsearch
 from datetime import datetime as dt
 
-es = Elasticsearch(hosts=["elasticsearch"])
+es = Elasticsearch("http://elasticsearch:9200")
 engine = sqlalchemy.create_engine(
-    "mariadb+mariadbconnector://user1:password1@db:3306/mydb"
+    "postgresql+psycopg://user1:password1@db:5432/mydb"
 )
 app = Flask(__name__)
 
@@ -56,7 +56,7 @@ def add():
     doc = {"title": str(dt.now()), "text": text}
 
     res = es.index(index="test-index", body=doc)
-    return res
+    return jsonify(res.body)
 
 
 @app.route("/search")
@@ -64,7 +64,7 @@ def search():
     text = request.args.get("text", "")
 
     res = es.search(index="test-index", body={"query": {"match": {"text": text}}})
-    return res
+    return jsonify(res.body)
 
 
 app.run("0.0.0.0", port=8989, debug=True)
